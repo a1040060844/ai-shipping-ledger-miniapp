@@ -1,0 +1,24 @@
+[Unit]
+Description=AI Shipping Ledger API
+After=network-online.target postgresql.service minio-shipping-ledger.service
+Wants=network-online.target
+Requires=postgresql.service minio-shipping-ledger.service
+
+[Service]
+Type=simple
+User=shipping-ledger
+Group=shipping-ledger
+WorkingDirectory=/opt/ai-shipping-ledger/server
+EnvironmentFile=/etc/ai-shipping-ledger/server.env
+ExecStart=/usr/bin/node /opt/ai-shipping-ledger/server/dist/app.js
+Restart=always
+RestartSec=3
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/shipping-ledger
+
+[Install]
+WantedBy=multi-user.target
