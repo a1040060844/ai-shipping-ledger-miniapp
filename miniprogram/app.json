@@ -3,17 +3,20 @@
     "pages/index/index",
     "pages/upload/upload",
     "pages/detail/detail",
-    "pages/ledger/ledger"
+    "pages/ledger/ledger",
+    "pages/stats/stats",
+    "pages/products/products"
   ],
   "window": {
     "navigationBarTitleText": "AI 发货台账",
     "navigationBarBackgroundColor": "#ffffff",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#f5f6f7"
+    "backgroundColor": "#f4f7f6",
+    "backgroundTextStyle": "dark"
   },
   "tabBar": {
-    "color": "#7a7f87",
-    "selectedColor": "#111827",
+    "color": "#7b8883",
+    "selectedColor": "#176b4d",
     "backgroundColor": "#ffffff",
     "borderStyle": "white",
     "list": [
@@ -24,6 +27,14 @@
       {
         "pagePath": "pages/ledger/ledger",
         "text": "台账"
+      },
+      {
+        "pagePath": "pages/stats/stats",
+        "text": "统计"
+      },
+      {
+        "pagePath": "pages/products/products",
+        "text": "产品"
       }
     ]
   },
