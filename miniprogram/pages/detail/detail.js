@@ -3,6 +3,18 @@ const {
   updateShipmentField,
   updateItemField
 } = require('../../services/storage')
+const { decorateShipment } = require('../../utils/ui')
+
+function decorate(shipment) {
+  if (!shipment) return null
+  const decorated = decorateShipment(shipment)
+  decorated.items = (decorated.items || []).map((item, index) => ({
+    ...item,
+    displayIndex: index + 1,
+    needsReview: Object.values(item.fieldState || {}).some((state) => state === 'needs_review')
+  }))
+  return decorated
+}
 
 Page({
   data: {
@@ -24,14 +36,14 @@ Page({
       wx.showToast({ title: '记录不存在', icon: 'none' })
       return
     }
-    this.setData({ shipment })
+    this.setData({ shipment: decorate(shipment) })
   },
 
   onHeaderBlur(event) {
     const { field } = event.currentTarget.dataset
     const value = event.detail.value
     const shipment = updateShipmentField(this.data.shipmentId, field, value)
-    this.setData({ shipment })
+    this.setData({ shipment: decorate(shipment) })
   },
 
   onItemBlur(event) {
@@ -39,16 +51,20 @@ Page({
     let value = event.detail.value
 
     if (numeric === true || numeric === 'true') {
-      value = Number(value)
-      if (!Number.isFinite(value) || value < 0) {
-        wx.showToast({ title: '请输入有效数字', icon: 'none' })
-        this.loadShipment()
-        return
+      if (value === '') {
+        value = null
+      } else {
+        value = Number(value)
+        if (!Number.isFinite(value) || value < 0) {
+          wx.showToast({ title: '请输入有效数字', icon: 'none' })
+          this.loadShipment()
+          return
+        }
       }
     }
 
     const shipment = updateItemField(this.data.shipmentId, itemId, field, value)
-    this.setData({ shipment })
+    this.setData({ shipment: decorate(shipment) })
   },
 
   previewSource() {
