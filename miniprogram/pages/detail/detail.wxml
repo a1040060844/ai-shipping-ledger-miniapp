@@ -6,9 +6,13 @@
         <view class="muted">{{shipment.shipmentDate || '未识别日期'}}</view>
       </view>
       <view class="badge badge-warning" wx:if="{{shipment.recognitionStatus === 'mock_reviewed'}}">演示识别</view>
+      <view class="badge" wx:if="{{shipment.recognitionStatus === 'auto_accepted'}}">AI 已自动记录</view>
+      <view class="badge badge-warning" wx:if="{{shipment.recognitionStatus === 'ai_review_required'}}">AI 复核后仍有疑点</view>
+      <view class="badge badge-warning" wx:if="{{shipment.recognitionStatus === 'human_review_required'}}">需要人工确认</view>
     </view>
 
-    <view class="summary-line">{{shipment.totalCartons}} 箱 · {{shipment.totalUnits}} 件</view>
+    <view class="summary-line" wx:if="{{shipment.quantityStatus !== 'incomplete'}}">{{shipment.totalCartons}} 箱 · {{shipment.totalUnits}} 件</view>
+    <view class="summary-line" wx:else>已识别 {{shipment.knownCartons}} 箱 · {{shipment.knownUnits}} 件，仍有数量待确认</view>
     <button class="secondary-button source-button" bindtap="previewSource">查看原始发货单</button>
   </view>
 
@@ -33,23 +37,23 @@
   <view wx:for="{{shipment.items}}" wx:key="id" class="card item-card">
     <view class="row item-head">
       <view class="item-index">商品 {{index + 1}}</view>
-      <view class="badge badge-warning" wx:if="{{item.fieldState.cartons === 'needs_review'}}">有字段待复核</view>
+      <view class="badge badge-warning" wx:if="{{item.needsReview}}">有字段待复核</view>
     </view>
 
     <view class="source-text">原单：{{item.sourceText}}</view>
 
-    <view class="field-block">
-      <view class="field-label">标准商品名</view>
+    <view class="field-block {{item.fieldState.productNameNormalized === 'needs_review' ? 'field-warning' : ''}}">
+      <view class="field-label">标准商品名 {{item.fieldState.productNameNormalized === 'needs_review' ? '· 需确认' : ''}}</view>
       <input class="field-input" value="{{item.productNameNormalized}}" data-item-id="{{item.id}}" data-field="productNameNormalized" bindblur="onItemBlur" />
     </view>
 
     <view class="field-grid">
-      <view class="field-block">
-        <view class="field-label">SKU</view>
+      <view class="field-block {{item.fieldState.skuObserved === 'needs_review' ? 'field-warning' : ''}}">
+        <view class="field-label">SKU {{item.fieldState.skuObserved === 'needs_review' ? '· 需确认' : ''}}</view>
         <input class="field-input" value="{{item.skuObserved}}" data-item-id="{{item.id}}" data-field="skuObserved" bindblur="onItemBlur" />
       </view>
-      <view class="field-block">
-        <view class="field-label">规格</view>
+      <view class="field-block {{item.fieldState.specification === 'needs_review' ? 'field-warning' : ''}}">
+        <view class="field-label">规格 {{item.fieldState.specification === 'needs_review' ? '· 需确认' : ''}}</view>
         <input class="field-input" value="{{item.specification}}" data-item-id="{{item.id}}" data-field="specification" bindblur="onItemBlur" />
       </view>
     </view>
@@ -59,17 +63,18 @@
         <view class="field-label">箱数 {{item.fieldState.cartons === 'needs_review' ? '· 需确认' : ''}}</view>
         <input type="number" class="field-input" value="{{item.cartons}}" data-item-id="{{item.id}}" data-field="cartons" data-numeric="true" bindblur="onItemBlur" />
       </view>
-      <view class="field-block">
-        <view class="field-label">每箱件数</view>
+      <view class="field-block {{item.fieldState.unitsPerCarton === 'needs_review' ? 'field-warning' : ''}}">
+        <view class="field-label">每箱件数 {{item.fieldState.unitsPerCarton === 'needs_review' ? '· 需确认' : ''}}</view>
         <input type="number" class="field-input" value="{{item.unitsPerCarton}}" data-item-id="{{item.id}}" data-field="unitsPerCarton" data-numeric="true" bindblur="onItemBlur" />
       </view>
     </view>
 
-    <view class="calculation">{{item.cartons}} 箱 × {{item.unitsPerCarton}} = <text class="calculation-strong">{{item.totalUnits}} 件</text></view>
+    <view class="calculation" wx:if="{{item.totalUnits !== null}}">{{item.cartons}} 箱 × {{item.unitsPerCarton}} = <text class="calculation-strong">{{item.totalUnits}} 件</text></view>
+    <view class="calculation" wx:else>数量信息未完整，暂不计算总件数</view>
   </view>
 
   <view class="card audit-note">
     <view class="section-title">修改原则</view>
-    <view class="muted">字段失焦后自动保存。人工修改会写入审计记录；箱数或装箱数变化后，总件数由程序自动重算。</view>
+    <view class="muted">字段失焦后自动保存。人工修改会写入审计记录；箱数或装箱数变化后，总件数由程序自动重算。看不清的数据不会被静默当成 0。</view>
   </view>
 </view>
