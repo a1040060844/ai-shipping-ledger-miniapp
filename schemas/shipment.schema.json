@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/shipment.schema.json",
+  "title": "Shipment",
+  "type": "object",
+  "required": ["id", "factoryId", "status", "sourceFileIds", "items", "createdAt", "updatedAt"],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "factoryId": {"type": "string", "minLength": 1},
+    "shipmentDate": {"type": ["string", "null"], "format": "date"},
+    "documentNo": {"type": ["string", "null"]},
+    "status": {"enum": ["active", "corrected", "void"]},
+    "sourceFileIds": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "items": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/shipmentItem"}
+    },
+    "createdAt": {"type": "string", "format": "date-time"},
+    "updatedAt": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "region": {
+      "type": ["object", "null"],
+      "properties": {
+        "x": {"type": "number", "minimum": 0, "maximum": 1},
+        "y": {"type": "number", "minimum": 0, "maximum": 1},
+        "width": {"type": "number", "minimum": 0, "maximum": 1},
+        "height": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "required": ["x", "y", "width", "height"],
+      "additionalProperties": false
+    },
+    "fieldEvidence": {
+      "type": "object",
+      "required": ["field", "finalValue", "decision", "visualConfirmed"],
+      "properties": {
+        "field": {"type": "string"},
+        "ocrValue": {},
+        "ocrConfidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "aiValue": {},
+        "aiConfidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+        "finalValue": {},
+        "decision": {"enum": ["auto", "ai_review", "human"]},
+        "visualConfirmed": {"type": "boolean"},
+        "historyMatched": {"type": "boolean", "default": false},
+        "notes": {"type": ["string", "null"]},
+        "region": {"$ref": "#/$defs/region"}
+      },
+      "additionalProperties": false
+    },
+    "shipmentItem": {
+      "type": "object",
+      "required": ["id", "sourceFileId", "sourceText", "cartons", "unitsPerCarton", "totalUnits", "evidence"],
+      "properties": {
+        "id": {"type": "string"},
+        "sourceFileId": {"type": "string"},
+        "loadSection": {"enum": ["front", "back", "unknown"]},
+        "sourceText": {"type": "string"},
+        "skuObserved": {"type": ["string", "null"]},
+        "productId": {"type": ["string", "null"]},
+        "productNameObserved": {"type": ["string", "null"]},
+        "productNameNormalized": {"type": ["string", "null"]},
+        "specification": {"type": ["string", "null"]},
+        "color": {"type": ["string", "null"]},
+        "variant": {"type": ["string", "null"]},
+        "cartons": {"type": "number", "minimum": 0},
+        "unitsPerCarton": {"type": "number", "minimum": 0},
+        "totalUnits": {"type": "number", "minimum": 0},
+        "sourceRegion": {"$ref": "#/$defs/region"},
+        "evidence": {"type": "array", "items": {"$ref": "#/$defs/fieldEvidence"}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

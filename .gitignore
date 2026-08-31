@@ -1,0 +1,11 @@
+node_modules/
+.env
+.env.*
+.DS_Store
+*.log
+coverage/
+dist/
+# Never commit real shipping-order images or private exports
+private-data/
+exports/
+originals/

@@ -1,0 +1,48 @@
+{
+  "id": "shipment_factory_b_demo",
+  "factoryId": "factory_b",
+  "shipmentDate": "2026-08-31",
+  "documentNo": null,
+  "status": "active",
+  "sourceFileIds": ["source_b_1"],
+  "items": [
+    {
+      "id": "b_item_1_front",
+      "sourceFileId": "source_b_1",
+      "loadSection": "front",
+      "sourceText": "SKU-A 100克 PS光板药丸精油皂 白色+橙色 B 50箱*120",
+      "skuObserved": "SKU-A",
+      "productId": "product_ps_orange_b",
+      "productNameObserved": "PS光板药丸精油皂 白色+橙色 B",
+      "productNameNormalized": "PS光板药丸精油皂",
+      "specification": "100克",
+      "color": "白色+橙色",
+      "variant": "B",
+      "cartons": 50,
+      "unitsPerCarton": 120,
+      "totalUnits": 6000,
+      "sourceRegion": null,
+      "evidence": []
+    },
+    {
+      "id": "b_item_1_back",
+      "sourceFileId": "source_b_1",
+      "loadSection": "back",
+      "sourceText": "SKU-A 100克 PS光板药丸精油皂 白色+橙色 B 50箱*120",
+      "skuObserved": "SKU-A",
+      "productId": "product_ps_orange_b",
+      "productNameObserved": "PS光板药丸精油皂 白色+橙色 B",
+      "productNameNormalized": "PS光板药丸精油皂",
+      "specification": "100克",
+      "color": "白色+橙色",
+      "variant": "B",
+      "cartons": 50,
+      "unitsPerCarton": 120,
+      "totalUnits": 6000,
+      "sourceRegion": null,
+      "evidence": []
+    }
+  ],
+  "createdAt": "2026-08-31T05:00:00.000Z",
+  "updatedAt": "2026-08-31T05:00:00.000Z"
+}

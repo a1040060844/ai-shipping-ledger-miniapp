@@ -1,0 +1,48 @@
+{
+  "id": "shipment_factory_a_demo",
+  "factoryId": "factory_a",
+  "shipmentDate": "2026-08-31",
+  "documentNo": "DEMO-A-001",
+  "status": "active",
+  "sourceFileIds": ["source_a_1"],
+  "items": [
+    {
+      "id": "a_item_1",
+      "sourceFileId": "source_a_1",
+      "loadSection": "unknown",
+      "sourceText": "100克双色精油皂 T1 288/箱 数量10箱",
+      "skuObserved": null,
+      "productId": "product_dual_t1",
+      "productNameObserved": "双色精油皂 T1",
+      "productNameNormalized": "双色精油皂",
+      "specification": "100克",
+      "color": null,
+      "variant": "T1",
+      "cartons": 10,
+      "unitsPerCarton": 288,
+      "totalUnits": 2880,
+      "sourceRegion": null,
+      "evidence": []
+    },
+    {
+      "id": "a_item_2",
+      "sourceFileId": "source_a_1",
+      "loadSection": "unknown",
+      "sourceText": "100克黑色精油皂 T2 288/箱 数量5箱",
+      "skuObserved": null,
+      "productId": "product_black_t2",
+      "productNameObserved": "黑色精油皂 T2",
+      "productNameNormalized": "黑色精油皂",
+      "specification": "100克",
+      "color": "黑色",
+      "variant": "T2",
+      "cartons": 5,
+      "unitsPerCarton": 288,
+      "totalUnits": 1440,
+      "sourceRegion": null,
+      "evidence": []
+    }
+  ],
+  "createdAt": "2026-08-31T05:00:00.000Z",
+  "updatedAt": "2026-08-31T05:00:00.000Z"
+}
