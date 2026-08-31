@@ -16,6 +16,32 @@ jobs:
           node-version: 22
       - run: npm test
 
+  miniapp-static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check mini program JavaScript syntax
+        run: find miniprogram -name '*.js' -print0 | xargs -0 -n1 node --check
+      - name: Validate mini program JSON and declared pages
+        run: |
+          node <<'NODE'
+          const fs = require('fs')
+          const path = require('path')
+          const app = JSON.parse(fs.readFileSync('miniprogram/app.json', 'utf8'))
+          for (const page of app.pages) {
+            for (const ext of ['js', 'json', 'wxml', 'wxss']) {
+              const file = path.join('miniprogram', `${page}.${ext}`)
+              if (!fs.existsSync(file)) throw new Error(`Missing declared page file: ${file}`)
+              if (ext === 'json') JSON.parse(fs.readFileSync(file, 'utf8'))
+            }
+          }
+          JSON.parse(fs.readFileSync('miniprogram/app.json', 'utf8'))
+          console.log(`Validated ${app.pages.length} mini program pages`)
+          NODE
+
   server-build:
     runs-on: ubuntu-latest
     defaults:
