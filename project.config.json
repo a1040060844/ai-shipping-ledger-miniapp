@@ -1,6 +1,7 @@
 {
   "description": "AI 发货台账微信小程序",
   "miniprogramRoot": "miniprogram/",
+  "cloudfunctionRoot": "cloudfunctions/",
   "compileType": "miniprogram",
   "appid": "touristappid",
   "projectname": "ai-shipping-ledger-miniapp",
