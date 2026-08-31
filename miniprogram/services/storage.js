@@ -14,32 +14,44 @@ function saveShipments(shipments) {
   return shipments
 }
 
+function numberOrNull(value) {
+  if (value === null || value === undefined || value === '') return null
+  const numeric = Number(value)
+  return Number.isFinite(numeric) && numeric >= 0 ? numeric : null
+}
+
 function recalculateShipment(shipment) {
   const items = (shipment.items || []).map((item) => {
-    const cartons = Number(item.cartons) || 0
-    const unitsPerCarton = Number(item.unitsPerCarton) || 0
+    const cartons = numberOrNull(item.cartons)
+    const unitsPerCarton = numberOrNull(item.unitsPerCarton)
     return {
       ...item,
       cartons,
       unitsPerCarton,
-      totalUnits: cartons * unitsPerCarton
+      totalUnits: cartons !== null && unitsPerCarton !== null ? cartons * unitsPerCarton : null
     }
   })
 
-  const totals = items.reduce(
+  const knownTotals = items.reduce(
     (acc, item) => {
-      acc.cartons += item.cartons
-      acc.units += item.totalUnits
+      if (item.cartons !== null) acc.cartons += item.cartons
+      if (item.totalUnits !== null) acc.units += item.totalUnits
       return acc
     },
     { cartons: 0, units: 0 }
   )
 
+  const cartonsComplete = items.every((item) => item.cartons !== null)
+  const unitsComplete = items.every((item) => item.totalUnits !== null)
+
   return {
     ...shipment,
     items,
-    totalCartons: totals.cartons,
-    totalUnits: totals.units,
+    totalCartons: cartonsComplete ? knownTotals.cartons : null,
+    totalUnits: unitsComplete ? knownTotals.units : null,
+    knownCartons: knownTotals.cartons,
+    knownUnits: knownTotals.units,
+    quantityStatus: cartonsComplete && unitsComplete ? 'complete' : 'incomplete',
     updatedAt: nowIso()
   }
 }
@@ -67,10 +79,14 @@ function updateShipmentField(id, field, value) {
   const shipment = getShipmentById(id)
   if (!shipment) return null
 
+  const before = shipment[field]
   shipment[field] = value
   shipment.auditLogs = shipment.auditLogs || []
   shipment.auditLogs.push({
+    entityType: 'shipment',
+    entityId: id,
     field,
+    before,
     after: value,
     actor: 'human',
     createdAt: nowIso()
@@ -90,6 +106,7 @@ function updateItemField(shipmentId, itemId, field, value) {
   item[field] = value
   item.fieldState = item.fieldState || {}
   item.fieldState[field] = 'human_confirmed'
+  item.needsReview = Object.values(item.fieldState).some((state) => state === 'needs_review')
 
   shipment.auditLogs = shipment.auditLogs || []
   shipment.auditLogs.push({
@@ -109,11 +126,12 @@ function summarizeShipments(shipments) {
   return (shipments || []).reduce(
     (acc, shipment) => {
       acc.shipments += 1
-      acc.cartons += Number(shipment.totalCartons) || 0
-      acc.units += Number(shipment.totalUnits) || 0
+      if (shipment.totalCartons !== null && shipment.totalCartons !== undefined) acc.cartons += Number(shipment.totalCartons) || 0
+      if (shipment.totalUnits !== null && shipment.totalUnits !== undefined) acc.units += Number(shipment.totalUnits) || 0
+      if (shipment.quantityStatus === 'incomplete') acc.incompleteShipments += 1
       return acc
     },
-    { shipments: 0, cartons: 0, units: 0 }
+    { shipments: 0, cartons: 0, units: 0, incompleteShipments: 0 }
   )
 }
 
