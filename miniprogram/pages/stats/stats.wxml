@@ -1,0 +1,78 @@
+<view class="container">
+  <view class="stats-head">
+    <view class="page-title">发货统计</view>
+    <view class="muted">这里统计的是已经识别并记录的数据；待复核数字不会被偷偷补成 0。</view>
+  </view>
+
+  <view class="period-row">
+    <picker mode="date" fields="month" value="{{month}}" bindchange="onMonthChange">
+      <view class="period-button">{{month || '全部时间'}} <text class="period-arrow">⌄</text></view>
+    </picker>
+    <view class="all-time" wx:if="{{month}}" bindtap="showAllTime">全部时间</view>
+  </view>
+
+  <view class="kpi-grid">
+    <view class="kpi-card kpi-primary">
+      <view class="kpi-label">已确认件数</view>
+      <view class="kpi-value">{{summary.units}}</view>
+      <view class="kpi-foot">{{summary.cartons}} 箱</view>
+    </view>
+    <view class="kpi-card">
+      <view class="kpi-label">发货单</view>
+      <view class="kpi-value small-value">{{summary.shipments}}</view>
+      <view class="kpi-foot">{{summary.factories}} 个工厂</view>
+    </view>
+    <view class="kpi-card">
+      <view class="kpi-label">商品</view>
+      <view class="kpi-value small-value">{{summary.products}}</view>
+      <view class="kpi-foot">按标准商品 / SKU 汇总</view>
+    </view>
+    <view class="kpi-card {{summary.pending > 0 ? 'kpi-warning' : ''}}">
+      <view class="kpi-label">待复核单据</view>
+      <view class="kpi-value small-value">{{summary.pending}}</view>
+      <view class="kpi-foot">未确认数据不混入完整合计</view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <view class="section-title">按工厂</view>
+    <view class="muted small">按已确认件数排序</view>
+  </view>
+
+  <view class="card empty-state" wx:if="{{factories.length === 0}}">
+    <view class="empty-title">这个时间段还没有数据</view>
+    <view class="muted">上传发货单后，工厂统计会自动出现。</view>
+  </view>
+
+  <view class="rank-list" wx:else>
+    <view class="rank-row" wx:for="{{factories}}" wx:key="name">
+      <view class="rank-top">
+        <view class="rank-name">{{index + 1}}. {{item.name}}</view>
+        <view class="rank-number">{{item.units}} 件</view>
+      </view>
+      <view class="rank-meta">{{item.shipments}} 张单 · {{item.cartons}} 箱</view>
+      <view class="bar-track"><view class="bar-fill" style="width: {{item.barWidth}}%;"></view></view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <view class="section-title">按商品</view>
+    <view class="muted small">重复 SKU 已汇总</view>
+  </view>
+
+  <view class="rank-list" wx:if="{{products.length}}">
+    <view class="product-rank" wx:for="{{products}}" wx:key="key">
+      <view class="row product-rank-top">
+        <view class="product-name">{{item.name}}</view>
+        <view class="rank-number">{{item.units}} 件</view>
+      </view>
+      <view class="product-meta">
+        <text wx:if="{{item.sku}}">{{item.sku}}</text>
+        <text wx:if="{{item.sku && item.specification}}"> · </text>
+        <text wx:if="{{item.specification}}">{{item.specification}}</text>
+        <text> · {{item.cartons}} 箱</text>
+      </view>
+      <view class="bar-track"><view class="bar-fill product-bar" style="width: {{item.barWidth}}%;"></view></view>
+    </view>
+  </view>
+</view>
