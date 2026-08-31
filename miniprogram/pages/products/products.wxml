@@ -1,0 +1,59 @@
+<view class="container">
+  <view class="products-head">
+    <view class="page-title">产品库</view>
+    <view class="muted">把历史发过的香皂沉淀成商品知识，AI 下次识别模糊文字时优先从这里复核。</view>
+  </view>
+
+  <view class="search-shell">
+    <view class="search-mark">⌕</view>
+    <input class="search-input" placeholder="搜索商品名 / SKU / 规格 / 颜色" value="{{keyword}}" bindinput="onSearchInput" />
+  </view>
+
+  <view class="knowledge-note">
+    <view class="knowledge-title">历史商品会越用越准</view>
+    <view class="muted small">商品名称、SKU、规格、颜色和常见装箱数会成为 AI 的复核候选，但不会用历史数量覆盖本次真实发货数量。</view>
+  </view>
+
+  <view class="section-head">
+    <view class="section-title">历史商品 {{products.length}}</view>
+    <view class="muted small">按累计件数排序</view>
+  </view>
+
+  <view wx:if="{{products.length === 0}}" class="card empty-state">
+    <view class="empty-title">还没有商品数据</view>
+    <view class="muted">识别第一张发货单后，商品会自动出现在这里。</view>
+  </view>
+
+  <view class="product-card" wx:for="{{products}}" wx:key="key">
+    <view class="product-top">
+      <view class="product-main">
+        <view class="product-name">{{item.name}}</view>
+        <view class="product-tags">
+          <view class="product-tag" wx:if="{{item.sku}}">{{item.sku}}</view>
+          <view class="product-tag" wx:if="{{item.specification}}">{{item.specification}}</view>
+          <view class="product-tag" wx:if="{{item.color}}">{{item.color}}</view>
+          <view class="product-tag" wx:if="{{item.variant}}">{{item.variant}}</view>
+        </view>
+      </view>
+      <view class="pack-badge" wx:if="{{item.commonPack !== null}}">
+        <view class="pack-number">{{item.commonPack}}</view>
+        <view class="pack-label">件/箱常用</view>
+      </view>
+    </view>
+
+    <view class="product-stats">
+      <view class="product-stat">
+        <view class="product-stat-value">{{item.shipments}}</view>
+        <view class="product-stat-label">次发货</view>
+      </view>
+      <view class="product-stat">
+        <view class="product-stat-value">{{item.cartons}}</view>
+        <view class="product-stat-label">累计箱</view>
+      </view>
+      <view class="product-stat product-stat-wide">
+        <view class="product-stat-value">{{item.units}}</view>
+        <view class="product-stat-label">累计件</view>
+      </view>
+    </view>
+  </view>
+</view>
