@@ -1,0 +1,12 @@
+[Unit]
+Description=Backup AI Shipping Ledger data
+After=postgresql.service minio-shipping-ledger.service
+Requires=postgresql.service minio-shipping-ledger.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/sbin/ai-shipping-ledger-backup
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
