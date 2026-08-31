@@ -31,3 +31,17 @@ jobs:
       - run: npm install
       - run: npx prisma generate
       - run: npm run build
+
+  ubuntu24-deploy-scripts:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bash syntax
+        run: |
+          bash -n deploy/ubuntu24/bootstrap.sh
+          bash -n deploy/ubuntu24/deploy-app.sh
+          bash -n deploy/ubuntu24/backup.sh
+          bash -n deploy/ubuntu24/verify.sh
+      - name: Reject secrets accidentally committed to deployment files
+        run: |
+          ! grep -R -E 'DASHSCOPE_API_KEY=(sk-|[A-Za-z0-9]{30,})' deploy/ubuntu24 CODEX_DEPLOY.md
