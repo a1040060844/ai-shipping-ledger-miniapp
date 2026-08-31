@@ -1,0 +1,11 @@
+[Unit]
+Description=Run AI Shipping Ledger backup daily
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+RandomizedDelaySec=900
+Unit=ai-shipping-ledger-backup.service
+
+[Install]
+WantedBy=timers.target
