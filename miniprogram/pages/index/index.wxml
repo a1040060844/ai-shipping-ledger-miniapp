@@ -12,12 +12,16 @@
     </view>
     <view class="stat-card">
       <view class="stat-value">{{summary.cartons}}</view>
-      <view class="muted">总箱数</view>
+      <view class="muted">已确认箱数</view>
     </view>
     <view class="stat-card">
       <view class="stat-value">{{summary.units}}</view>
-      <view class="muted">总件数</view>
+      <view class="muted">已确认件数</view>
     </view>
+  </view>
+
+  <view class="card" wx:if="{{summary.incompleteShipments > 0}}">
+    <view class="badge badge-warning">{{summary.incompleteShipments}} 张发货单仍有数量待确认，未计入完整合计</view>
   </view>
 
   <view class="section-title">最近记录</view>
@@ -38,7 +42,8 @@
       <view class="shipment-factory">{{item.factoryName}}</view>
       <view class="muted">{{item.shipmentDate}}</view>
     </view>
-    <view class="shipment-summary">{{item.items.length}} 种明细 · {{item.totalCartons}} 箱 · {{item.totalUnits}} 件</view>
+    <view class="shipment-summary" wx:if="{{item.quantityStatus !== 'incomplete'}}">{{item.items.length}} 种明细 · {{item.totalCartons}} 箱 · {{item.totalUnits}} 件</view>
+    <view class="shipment-summary" wx:else>{{item.items.length}} 种明细 · 已确认 {{item.knownCartons}} 箱 / {{item.knownUnits}} 件 · 有待确认数量</view>
     <view class="muted" wx:if="{{item.documentNo}}">单号：{{item.documentNo}}</view>
   </view>
 </view>
