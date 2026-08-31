@@ -4,6 +4,10 @@ function unwrap(field) {
   return field && field.value !== undefined ? field.value : null
 }
 
+function uiFieldState(decision) {
+  return decision === 'auto' ? 'auto' : 'needs_review'
+}
+
 function evidenceFor(fieldName, field, decision) {
   if (!field) return null
   return {
@@ -29,8 +33,10 @@ function normalizeRecognition(recognition, sourceFiles, now = new Date()) {
   const decisionByField = new Map(plan.map((entry) => [`${entry.itemIndex}:${entry.fieldName}`, entry.decision]))
 
   const items = (recognition.items || []).map((item, itemIndex) => {
-    const cartons = Number(unwrap(item.cartons))
-    const unitsPerCarton = Number(unwrap(item.unitsPerCarton))
+    const cartonsRaw = unwrap(item.cartons)
+    const unitsPerCartonRaw = unwrap(item.unitsPerCarton)
+    const cartons = cartonsRaw === null || cartonsRaw === '' ? NaN : Number(cartonsRaw)
+    const unitsPerCarton = unitsPerCartonRaw === null || unitsPerCartonRaw === '' ? NaN : Number(unitsPerCartonRaw)
     const validCartons = Number.isFinite(cartons) && cartons >= 0 ? cartons : null
     const validUnitsPerCarton = Number.isFinite(unitsPerCarton) && unitsPerCarton >= 0 ? unitsPerCarton : null
     const totalUnits = validCartons !== null && validUnitsPerCarton !== null
@@ -38,10 +44,15 @@ function normalizeRecognition(recognition, sourceFiles, now = new Date()) {
       : null
 
     const evidence = []
+    const fieldState = {}
+    let needsReview = false
+
     ;['skuObserved', 'productNameNormalized', 'specification', 'color', 'variant', 'cartons', 'unitsPerCarton'].forEach((fieldName) => {
       const decision = decisionByField.get(`${itemIndex}:${fieldName}`) || 'auto'
       const fieldEvidence = evidenceFor(fieldName, item[fieldName], decision)
       if (fieldEvidence) evidence.push(fieldEvidence)
+      fieldState[fieldName] = uiFieldState(decision)
+      if (decision !== 'auto') needsReview = true
     })
 
     return {
@@ -60,15 +71,8 @@ function normalizeRecognition(recognition, sourceFiles, now = new Date()) {
       cartons: validCartons,
       unitsPerCarton: validUnitsPerCarton,
       totalUnits,
-      fieldState: {
-        skuObserved: decisionByField.get(`${itemIndex}:skuObserved`) || 'auto',
-        productNameNormalized: decisionByField.get(`${itemIndex}:productNameNormalized`) || 'auto',
-        specification: decisionByField.get(`${itemIndex}:specification`) || 'auto',
-        color: decisionByField.get(`${itemIndex}:color`) || 'auto',
-        variant: decisionByField.get(`${itemIndex}:variant`) || 'auto',
-        cartons: decisionByField.get(`${itemIndex}:cartons`) || 'auto',
-        unitsPerCarton: decisionByField.get(`${itemIndex}:unitsPerCarton`) || 'auto'
-      },
+      fieldState,
+      needsReview,
       evidence
     }
   })
