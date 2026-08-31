@@ -1,80 +1,169 @@
 <view class="container" wx:if="{{shipment}}">
-  <view class="card">
-    <view class="row summary-head">
-      <view>
-        <view class="title">{{shipment.factoryName}}</view>
-        <view class="muted">{{shipment.shipmentDate || '未识别日期'}}</view>
-      </view>
-      <view class="badge badge-warning" wx:if="{{shipment.recognitionStatus === 'mock_reviewed'}}">演示识别</view>
-      <view class="badge" wx:if="{{shipment.recognitionStatus === 'auto_accepted'}}">AI 已自动记录</view>
-      <view class="badge badge-warning" wx:if="{{shipment.recognitionStatus === 'ai_review_required'}}">AI 复核后仍有疑点</view>
-      <view class="badge badge-warning" wx:if="{{shipment.recognitionStatus === 'human_review_required'}}">需要人工确认</view>
+  <view class="summary-card">
+    <view class="row summary-top">
+      <view class="badge badge-{{shipment.statusTone}}">{{shipment.statusText}}</view>
+      <view class="summary-date">{{shipment.displayDate}}</view>
     </view>
 
-    <view class="summary-line" wx:if="{{shipment.quantityStatus !== 'incomplete'}}">{{shipment.totalCartons}} 箱 · {{shipment.totalUnits}} 件</view>
-    <view class="summary-line" wx:else>已识别 {{shipment.knownCartons}} 箱 · {{shipment.knownUnits}} 件，仍有数量待确认</view>
-    <button class="secondary-button source-button" bindtap="previewSource">查看原始发货单</button>
+    <view class="summary-factory">{{shipment.factoryName || '未识别工厂'}}</view>
+
+    <view class="summary-numbers" wx:if="{{shipment.quantityStatus !== 'incomplete'}}">
+      <view class="summary-number-block">
+        <view class="summary-number">{{shipment.totalCartons}}</view>
+        <view class="summary-unit">箱</view>
+      </view>
+      <view class="summary-separator"></view>
+      <view class="summary-number-block">
+        <view class="summary-number">{{shipment.totalUnits}}</view>
+        <view class="summary-unit">件</view>
+      </view>
+    </view>
+
+    <view class="summary-incomplete" wx:else>
+      <view class="summary-incomplete-title">已确认 {{shipment.knownCartons}} 箱 · {{shipment.knownUnits}} 件</view>
+      <view class="summary-incomplete-desc">还有数量字段看不清，暂不把它们静默计为 0。</view>
+    </view>
+
+    <view class="summary-docno" wx:if="{{shipment.documentNo}}">单号 {{shipment.documentNo}}</view>
   </view>
 
-  <view class="card">
+  <view class="review-banner" wx:if="{{shipment.reviewFieldCount > 0}}">
+    <view class="review-icon">!</view>
+    <view class="review-content">
+      <view class="review-title">只需要处理 {{shipment.reviewFieldCount}} 个不确定字段</view>
+      <view class="review-desc">黄色字段是 AI 多次复核后仍无法确定的内容。直接修改即可自动保存。</view>
+    </view>
+  </view>
+
+  <view class="source-action" bindtap="previewSource">
+    <view>
+      <view class="source-action-title">查看原始发货单</view>
+      <view class="source-action-desc">任何数字都可以回到最初上传的原图核对</view>
+    </view>
+    <view class="source-action-arrow">›</view>
+  </view>
+
+  <view class="section-head">
     <view class="section-title">单据信息</view>
+    <view class="autosave-note">修改后自动保存</view>
+  </view>
+
+  <view class="card document-card">
     <view class="field-block">
       <view class="field-label">工厂</view>
-      <input class="field-input" value="{{shipment.factoryName}}" data-field="factoryName" bindblur="onHeaderBlur" />
+      <input class="field-input" value="{{shipment.factoryName}}" data-field="factoryName" bindblur="onHeaderBlur" placeholder="未识别工厂" />
     </view>
-    <view class="field-block">
-      <view class="field-label">发货日期</view>
-      <input class="field-input" value="{{shipment.shipmentDate}}" data-field="shipmentDate" bindblur="onHeaderBlur" />
-    </view>
-    <view class="field-block">
-      <view class="field-label">发货单号</view>
-      <input class="field-input" placeholder="没有可留空" value="{{shipment.documentNo}}" data-field="documentNo" bindblur="onHeaderBlur" />
+    <view class="field-grid">
+      <view class="field-block">
+        <view class="field-label">发货日期</view>
+        <input class="field-input" value="{{shipment.shipmentDate}}" data-field="shipmentDate" bindblur="onHeaderBlur" placeholder="YYYY-MM-DD" />
+      </view>
+      <view class="field-block">
+        <view class="field-label">发货单号</view>
+        <input class="field-input" value="{{shipment.documentNo}}" data-field="documentNo" bindblur="onHeaderBlur" placeholder="没有可留空" />
+      </view>
     </view>
   </view>
 
-  <view class="section-title">商品明细</view>
+  <view class="section-head">
+    <view class="section-title">商品明细 · {{shipment.items.length}}</view>
+    <view class="muted small">总件数由程序计算</view>
+  </view>
 
-  <view wx:for="{{shipment.items}}" wx:key="id" class="card item-card">
-    <view class="row item-head">
-      <view class="item-index">商品 {{index + 1}}</view>
-      <view class="badge badge-warning" wx:if="{{item.needsReview}}">有字段待复核</view>
+  <view wx:for="{{shipment.items}}" wx:key="id" class="item-card {{item.needsReview ? 'item-card-warning' : ''}}">
+    <view class="item-head">
+      <view class="item-count">{{item.displayIndex}}</view>
+      <view class="item-title-wrap">
+        <view class="item-title">{{item.productNameNormalized || item.productNameObserved || '商品名称待识别'}}</view>
+        <view class="item-subtitle">
+          <text wx:if="{{item.skuObserved}}">{{item.skuObserved}}</text>
+          <text wx:if="{{item.skuObserved && item.specification}}"> · </text>
+          <text wx:if="{{item.specification}}">{{item.specification}}</text>
+        </view>
+      </view>
+      <view class="badge badge-warning" wx:if="{{item.needsReview}}">待复核</view>
+      <view class="badge badge-success" wx:else>已整理</view>
     </view>
 
-    <view class="source-text">原单：{{item.sourceText}}</view>
+    <view class="source-text" wx:if="{{item.sourceText}}">
+      <view class="source-label">原单文字</view>
+      <view>{{item.sourceText}}</view>
+    </view>
 
     <view class="field-block {{item.fieldState.productNameNormalized === 'needs_review' ? 'field-warning' : ''}}">
-      <view class="field-label">标准商品名 {{item.fieldState.productNameNormalized === 'needs_review' ? '· 需确认' : ''}}</view>
-      <input class="field-input" value="{{item.productNameNormalized}}" data-item-id="{{item.id}}" data-field="productNameNormalized" bindblur="onItemBlur" />
+      <view class="field-label-row">
+        <view class="field-label">标准商品名</view>
+        <view class="field-review-label" wx:if="{{item.fieldState.productNameNormalized === 'needs_review'}}">请核对</view>
+      </view>
+      <input class="field-input" value="{{item.productNameNormalized}}" data-item-id="{{item.id}}" data-field="productNameNormalized" bindblur="onItemBlur" placeholder="商品名称" />
     </view>
 
     <view class="field-grid">
       <view class="field-block {{item.fieldState.skuObserved === 'needs_review' ? 'field-warning' : ''}}">
-        <view class="field-label">SKU {{item.fieldState.skuObserved === 'needs_review' ? '· 需确认' : ''}}</view>
-        <input class="field-input" value="{{item.skuObserved}}" data-item-id="{{item.id}}" data-field="skuObserved" bindblur="onItemBlur" />
+        <view class="field-label-row">
+          <view class="field-label">SKU</view>
+          <view class="field-review-label" wx:if="{{item.fieldState.skuObserved === 'needs_review'}}">请核对</view>
+        </view>
+        <input class="field-input" value="{{item.skuObserved}}" data-item-id="{{item.id}}" data-field="skuObserved" bindblur="onItemBlur" placeholder="没有可留空" />
       </view>
       <view class="field-block {{item.fieldState.specification === 'needs_review' ? 'field-warning' : ''}}">
-        <view class="field-label">规格 {{item.fieldState.specification === 'needs_review' ? '· 需确认' : ''}}</view>
-        <input class="field-input" value="{{item.specification}}" data-item-id="{{item.id}}" data-field="specification" bindblur="onItemBlur" />
+        <view class="field-label-row">
+          <view class="field-label">规格</view>
+          <view class="field-review-label" wx:if="{{item.fieldState.specification === 'needs_review'}}">请核对</view>
+        </view>
+        <input class="field-input" value="{{item.specification}}" data-item-id="{{item.id}}" data-field="specification" bindblur="onItemBlur" placeholder="如 100克" />
       </view>
     </view>
 
     <view class="field-grid">
-      <view class="field-block {{item.fieldState.cartons === 'needs_review' ? 'field-warning' : ''}}">
-        <view class="field-label">箱数 {{item.fieldState.cartons === 'needs_review' ? '· 需确认' : ''}}</view>
-        <input type="number" class="field-input" value="{{item.cartons}}" data-item-id="{{item.id}}" data-field="cartons" data-numeric="true" bindblur="onItemBlur" />
+      <view class="field-block {{item.fieldState.color === 'needs_review' ? 'field-warning' : ''}}">
+        <view class="field-label-row">
+          <view class="field-label">颜色</view>
+          <view class="field-review-label" wx:if="{{item.fieldState.color === 'needs_review'}}">请核对</view>
+        </view>
+        <input class="field-input" value="{{item.color}}" data-item-id="{{item.id}}" data-field="color" bindblur="onItemBlur" placeholder="可留空" />
       </view>
-      <view class="field-block {{item.fieldState.unitsPerCarton === 'needs_review' ? 'field-warning' : ''}}">
-        <view class="field-label">每箱件数 {{item.fieldState.unitsPerCarton === 'needs_review' ? '· 需确认' : ''}}</view>
-        <input type="number" class="field-input" value="{{item.unitsPerCarton}}" data-item-id="{{item.id}}" data-field="unitsPerCarton" data-numeric="true" bindblur="onItemBlur" />
+      <view class="field-block {{item.fieldState.variant === 'needs_review' ? 'field-warning' : ''}}">
+        <view class="field-label-row">
+          <view class="field-label">款式 / 型号</view>
+          <view class="field-review-label" wx:if="{{item.fieldState.variant === 'needs_review'}}">请核对</view>
+        </view>
+        <input class="field-input" value="{{item.variant}}" data-item-id="{{item.id}}" data-field="variant" bindblur="onItemBlur" placeholder="如 T1 / B" />
       </view>
     </view>
 
-    <view class="calculation" wx:if="{{item.totalUnits !== null}}">{{item.cartons}} 箱 × {{item.unitsPerCarton}} = <text class="calculation-strong">{{item.totalUnits}} 件</text></view>
-    <view class="calculation" wx:else>数量信息未完整，暂不计算总件数</view>
+    <view class="quantity-panel">
+      <view class="quantity-title">本次发货数量</view>
+      <view class="field-grid quantity-grid">
+        <view class="field-block {{item.fieldState.cartons === 'needs_review' ? 'field-warning' : ''}}">
+          <view class="field-label-row">
+            <view class="field-label">箱数</view>
+            <view class="field-review-label" wx:if="{{item.fieldState.cartons === 'needs_review'}}">请核对</view>
+          </view>
+          <input type="number" class="field-input number-input" value="{{item.cartons}}" data-item-id="{{item.id}}" data-field="cartons" data-numeric="true" bindblur="onItemBlur" placeholder="—" />
+        </view>
+        <view class="field-block {{item.fieldState.unitsPerCarton === 'needs_review' ? 'field-warning' : ''}}">
+          <view class="field-label-row">
+            <view class="field-label">每箱件数</view>
+            <view class="field-review-label" wx:if="{{item.fieldState.unitsPerCarton === 'needs_review'}}">请核对</view>
+          </view>
+          <input type="number" class="field-input number-input" value="{{item.unitsPerCarton}}" data-item-id="{{item.id}}" data-field="unitsPerCarton" data-numeric="true" bindblur="onItemBlur" placeholder="—" />
+        </view>
+      </view>
+
+      <view class="calculation" wx:if="{{item.totalUnits !== null}}">
+        <view class="calculation-formula">{{item.cartons}} 箱 × {{item.unitsPerCarton}} 件/箱</view>
+        <view class="calculation-result">{{item.totalUnits}} 件</view>
+      </view>
+      <view class="calculation incomplete-calc" wx:else>
+        <view>数量信息还不完整</view>
+        <view class="muted small">补齐上面的黄色数字后会自动计算</view>
+      </view>
+    </view>
   </view>
 
-  <view class="card audit-note">
-    <view class="section-title">修改原则</view>
-    <view class="muted">字段失焦后自动保存。人工修改会写入审计记录；箱数或装箱数变化后，总件数由程序自动重算。看不清的数据不会被静默当成 0。</view>
+  <view class="save-footnote">
+    <view class="save-footnote-title">不需要再点“确认发货”</view>
+    <view class="muted">你修改的字段会直接保存，并留下修改记录。原始图片和 AI 识别证据不会被覆盖。</view>
   </view>
 </view>
