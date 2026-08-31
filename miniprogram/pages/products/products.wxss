@@ -1,0 +1,136 @@
+.products-head {
+  padding: 8rpx 4rpx 24rpx;
+}
+
+.search-shell {
+  min-height: 84rpx;
+  padding: 0 20rpx;
+  background: #ffffff;
+  border: 1rpx solid #e2e8e5;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.search-mark {
+  color: #75837d;
+  font-size: 30rpx;
+}
+
+.search-input {
+  flex: 1;
+  height: 82rpx;
+  font-size: 26rpx;
+}
+
+.knowledge-note {
+  margin-top: 16rpx;
+  padding: 22rpx 24rpx;
+  border-radius: 20rpx;
+  background: #edf6f1;
+  border: 1rpx solid #dcece4;
+}
+
+.knowledge-title {
+  color: #315e4c;
+  font-size: 24rpx;
+  font-weight: 700;
+  margin-bottom: 6rpx;
+}
+
+.product-card {
+  background: #ffffff;
+  border: 1rpx solid #e5ebe8;
+  border-radius: 24rpx;
+  padding: 26rpx;
+  margin-bottom: 16rpx;
+}
+
+.product-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18rpx;
+}
+
+.product-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.product-name {
+  font-size: 29rpx;
+  font-weight: 720;
+  line-height: 1.45;
+}
+
+.product-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+  margin-top: 12rpx;
+}
+
+.product-tag {
+  padding: 6rpx 12rpx;
+  border-radius: 12rpx;
+  background: #f1f4f2;
+  color: #63716b;
+  font-size: 20rpx;
+}
+
+.pack-badge {
+  flex: 0 0 auto;
+  min-width: 96rpx;
+  padding: 14rpx 12rpx;
+  border-radius: 18rpx;
+  background: #eaf5ef;
+  text-align: center;
+}
+
+.pack-number {
+  color: #176b4d;
+  font-size: 29rpx;
+  font-weight: 780;
+}
+
+.pack-label {
+  color: #779087;
+  font-size: 18rpx;
+  margin-top: 2rpx;
+}
+
+.product-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.25fr;
+  gap: 1rpx;
+  margin-top: 22rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #edf1ef;
+}
+
+.product-stat {
+  padding: 0 14rpx;
+  border-left: 1rpx solid #edf1ef;
+}
+
+.product-stat:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+.product-stat-wide {
+  padding-right: 0;
+}
+
+.product-stat-value {
+  font-size: 27rpx;
+  font-weight: 730;
+}
+
+.product-stat-label {
+  color: #8b9691;
+  font-size: 19rpx;
+  margin-top: 4rpx;
+}
