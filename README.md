@@ -9,6 +9,8 @@
 ```text
 微信小程序
    ↓ HTTPS
+Nginx
+   ↓ 127.0.0.1:3000
 自有 API 服务器（Fastify + TypeScript）
    ├─ PostgreSQL：发货台账 / 产品库 / 工厂库 / AI证据 / 修改记录
    ├─ MinIO：原始发货单对象存储
@@ -49,7 +51,7 @@ CloudBase 不再作为生产主路径。仓库中此前的云函数代码仅属�
 - AUTO_ACCEPT / AI_REVIEW / HUMAN_REVIEW
 - 交易数字不能被历史记录覆盖
 
-### Phase 3B — 自有服务器基础设施
+### Phase 3B — 自有服务器后端
 
 - `server/` Fastify + TypeScript
 - PostgreSQL + Prisma
@@ -61,41 +63,72 @@ CloudBase 不再作为生产主路径。仓库中此前的云函数代码仅属�
 - `/api/v1/files/:id/url`
 - Qwen OpenAI 兼容 Provider
 - 第一遍视觉识别 → 历史候选 → 第二遍复核
-- Docker Compose 部署
 - 小程序 Server API 适配器
 
-详见 `docs/04-self-hosted-backend.md`。
+### Phase 3C — Ubuntu 24 无 Docker 生产部署
 
-## 本地 / 服务器启动
+仓库已经加入：
+
+- Node.js 22 安装
+- PostgreSQL 本机数据库
+- MinIO 本机私有对象存储
+- systemd API / MinIO 服务
+- Nginx path 反向代理 snippet
+- Certbot 部署说明
+- 自动生成数据库/MinIO随机密码
+- 每日 PostgreSQL dump + MinIO mirror
+- 私有端口暴露检查
+- 一键部署与健康检查脚本
+- `CODEX_DEPLOY.md` Codex 部署运行手册
+
+生产服务器优先使用无 Docker 路径：`deploy/ubuntu24/`。
+
+## Ubuntu 24 部署
+
+部署前只在服务器环境变量中提供真实秘密，不要提交到 Git：
 
 ```bash
-export POSTGRES_PASSWORD='replace-me'
-export MINIO_ACCESS_KEY='replace-me'
-export MINIO_SECRET_KEY='replace-me-with-a-long-password'
+export DOMAIN='your-domain.example.com'
 export DASHSCOPE_API_KEY='sk-...'
 export DASHSCOPE_BASE_URL='https://YOUR_WORKSPACE_ID.cn-beijing.maas.aliyuncs.com/compatible-mode/v1'
-
-docker compose up -d --build
 ```
 
-健康检查：
+然后：
 
 ```bash
-curl http://127.0.0.1:3000/health
+sudo -E ./deploy/ubuntu24/bootstrap.sh
+sudo -E ./deploy/ubuntu24/deploy-app.sh
+```
+
+Nginx 接入与 HTTPS 见：
+
+- `deploy/ubuntu24/README.md`
+- `CODEX_DEPLOY.md`
+
+验证：
+
+```bash
+sudo -E ./deploy/ubuntu24/verify.sh
+```
+
+公网 API 默认挂在：
+
+```text
+https://<DOMAIN>/shipping-ledger-api/
 ```
 
 ## 小程序切换到真实服务器
 
-编辑 `miniprogram/config.js`：
+只有公网 HTTPS 健康检查通过后，才编辑 `miniprogram/config.js`：
 
 ```js
 module.exports = {
   BACKEND_MODE: 'server',
-  API_BASE_URL: 'https://你的API域名'
+  API_BASE_URL: 'https://你的域名/shipping-ledger-api'
 }
 ```
 
-正式微信小程序必须使用 HTTPS，并把 API 域名配置为微信小程序合法域名。
+正式微信小程序必须使用 HTTPS，并把该域名配置为微信小程序 request / uploadFile 合法域名。
 
 ## 数据原则
 
@@ -109,10 +142,9 @@ module.exports = {
 ## 下一阶段
 
 - API 登录与小程序身份鉴权
-- Nginx/Caddy HTTPS
 - 字段局部裁图二次识别
 - 重复发货单检测
 - 商品库管理
 - 统计页面
 - Excel / CSV / JSON / ZIP 完整数据库导出
-- PostgreSQL 与原图自动备份
+- 异机/异地备份
