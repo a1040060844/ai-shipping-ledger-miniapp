@@ -2,107 +2,117 @@
 
 面向香皂发货业务的 AI 发货台账微信小程序。
 
-核心目标不是“OCR 转文字”，而是：
+核心目标不是“OCR 转文字”，而是：原始发货单永久保存、AI 多级复核、只有真正无法确定的字段才人工介入，并把最终数据沉淀成可统计、可追溯、可完整导出的数据库。
 
-1. 原始发货单永久保存、可追溯；
-2. AI 多级识别与历史商品库复核；
-3. 只有无法确定的字段才进入人工介入；
-4. 发货数据结构化保存，支持按工厂 / 产品 / SKU / 日期统计；
-5. 同一 SKU 在同一发货单中的多处记录保留原始明细，同时可自动汇总；
-6. 任何统计结果都可以追溯到原图与字段位置；
-7. 完整数据库和原始图片可以整体导出，不锁死在平台内。
+## 当前正式架构
 
-## V1 范围
+```text
+微信小程序
+   ↓ HTTPS
+自有 API 服务器（Fastify + TypeScript）
+   ├─ PostgreSQL：发货台账 / 产品库 / 工厂库 / AI证据 / 修改记录
+   ├─ MinIO：原始发货单对象存储
+   └─ Qwen3.8-Flash：图片识别 + 历史商品候选复核
+```
 
-- 上传照片 / PDF
-- 原图、增强图、缩略图三层文件记录
-- OCR / 多模态视觉识别
-- 大模型二次复核
-- 产品库 / SKU / 工厂历史检索
-- 规则校验（箱数、装箱数、总件数）
-- 字段级可信度与人工复核
-- 发货单台账
-- 同 SKU 自动汇总
-- 原图定位追溯
-- 修改审计日志
-- Excel / CSV / JSON / 完整归档包导出
+CloudBase 不再作为生产主路径。仓库中此前的云函数代码仅属于早期实验阶段，后续以 `server/` 为准。
 
-## Phase 1：已完成数据模型
+## 已完成
 
-- 核心领域模型定义
-- JSON Schema
-- AI 识别状态机字段
-- 原始证据链字段
-- 可审计修改结构
-- 同 SKU 汇总逻辑
-- 两类业务结构的匿名样例
-- 自动化测试
+### Phase 1 — 数据模型
 
-## Phase 2：已完成微信小程序交互骨架
+- Shipment / ShipmentItem
+- Product / Factory / FactoryProductAlias
+- SourceFile 原始证据
+- FieldEvidence AI字段证据
+- AuditLog 修改记录
+- 同 SKU 原始明细保留 + 统计汇总
+- 总件数由程序确定性计算
 
-当前仓库已经包含可导入微信开发者工具的 `miniprogram/`：
+### Phase 2 — 微信小程序原型
 
-- 首页：累计发货单 / 箱数 / 件数、最近记录
-- 上传：拍照、相册、聊天文件、PDF，多图视为同一张发货单
-- 原图：识别前优先使用 `wx.saveFile` 持久化本地原件
-- 详情：商品名称、SKU、规格、箱数、装箱数可以直接修改
-- 自动保存：字段失焦即保存并写审计日志
-- 自动算账：`总件数 = 箱数 × 每箱件数`
-- 台账：结构化记录自动进入历史台账
-- 原图追溯：详情页可直接预览上传的原始图片
+- 首页
+- 拍照 / 相册 / PDF 上传
+- 多图属于同一张发货单
+- 发货详情编辑
+- 自动保存
+- 台账列表
+- 原图查看
+- Mock 模式可在没有服务器时继续演示
 
-详见：`docs/03-miniapp-prototype.md`
+### Phase 3A — Qwen 识别规则
 
-## Phase 3A：已完成 Qwen3.8-Flash 真实识别骨架
+- `qwen3.8-flash`
+- 严格结构化结果
+- 产品候选检索
+- AI 二次复核
+- AUTO_ACCEPT / AI_REVIEW / HUMAN_REVIEW
+- 交易数字不能被历史记录覆盖
 
-已经加入 `cloudfunctions/recognizeShipment/`：
+### Phase 3B — 自有服务器基础设施
 
-- CloudBase 原图上传接口
-- `qwen3.8-flash` 多模态 Provider
-- 第一遍原图识别
-- 根据第一遍结果检索 `products` / `factory_product_aliases`
-- 最多 8 个历史商品候选
-- 对不确定字段自动执行第二遍重点复核
-- 产品字段与交易字段使用不同的可信度策略
-- 箱数 / 每箱数量必须优先依据当前图片，历史值不能覆盖本次事实
-- AI 不计算总件数；程序确定性执行乘法
-- 无法确认的数据保持 `null`，不会静默变成 `0`
-- `auto_accepted / ai_review_required / human_review_required` 状态
-- 小程序可在 Mock / Cloud 两种识别模式之间切换
+- `server/` Fastify + TypeScript
+- PostgreSQL + Prisma
+- MinIO 原图存储
+- SHA-256 文件指纹
+- `/api/v1/files/upload`
+- `/api/v1/recognitions`
+- `/api/v1/shipments`
+- `/api/v1/files/:id/url`
+- Qwen OpenAI 兼容 Provider
+- 第一遍视觉识别 → 历史候选 → 第二遍复核
+- Docker Compose 部署
+- 小程序 Server API 适配器
 
-详见：`docs/04-qwen-cloud-recognition.md`
+详见 `docs/04-self-hosted-backend.md`。
 
-## 当前运行方式
+## 本地 / 服务器启动
 
-如果只测试界面：
+```bash
+export POSTGRES_PASSWORD='replace-me'
+export MINIO_ACCESS_KEY='replace-me'
+export MINIO_SECRET_KEY='replace-me-with-a-long-password'
+export DASHSCOPE_API_KEY='sk-...'
+export DASHSCOPE_BASE_URL='https://YOUR_WORKSPACE_ID.cn-beijing.maas.aliyuncs.com/compatible-mode/v1'
 
-1. 微信开发者工具导入仓库根目录。
-2. 当前 `appid` 为 `touristappid`。
-3. `miniprogram/app.js` 保持 `recognitionMode: 'mock'`。
+docker compose up -d --build
+```
 
-如果测试真实 Qwen：
+健康检查：
 
-1. 使用自己的微信小程序 AppID 和 CloudBase 环境。
-2. 在 `miniprogram/app.js` 填写 `cloudEnvId`，并把 `recognitionMode` 改成 `cloud`。
-3. 部署 `recognizeShipment` 云函数并安装云端依赖。
-4. 给云函数配置 `DASHSCOPE_API_KEY`。
-5. 可选配置 `QWEN_MODEL=qwen3.8-flash` 与 `DASHSCOPE_BASE_URL`。
+```bash
+curl http://127.0.0.1:3000/health
+```
 
-API Key 不进入 Git 仓库。
+## 小程序切换到真实服务器
 
-## 当前限制
+编辑 `miniprogram/config.js`：
 
-- 正式数据库集合尚未创建，台账仍主要使用小程序本地 Storage；
-- CloudBase 当前先用于真实识别所需的原始文件上传；
-- PDF 上传入口已经存在，但 Phase 3A 的真实模型链路先处理图片；
-- 专用 OCR 层尚未单独插入，目前第一遍由多模态模型直接看图；
-- 第二遍复核目前聚焦字段重新看整图，后续升级为字段坐标局部裁图；
-- 完整数据库 ZIP / Excel / CSV / JSON 导出尚未实现。
+```js
+module.exports = {
+  BACKEND_MODE: 'server',
+  API_BASE_URL: 'https://你的API域名'
+}
+```
 
-## 下一阶段：Phase 3B
+正式微信小程序必须使用 HTTPS，并把 API 域名配置为微信小程序合法域名。
 
-建立正式 CloudBase 数据层：
+## 数据原则
 
-`source_files → shipments → shipment_items → products → factories → aliases → field_evidence → audit_logs`
+1. 原始图片只新增，不覆盖。
+2. AI结果和人工最终值分开保留证据。
+3. 产品身份可以强依赖历史候选，箱数/日期/单号必须主要依赖当前图片。
+4. `总件数 = 箱数 × 每箱件数` 由程序计算。
+5. 同一 SKU 在“前面 / 后面”等多个位置出现时，原始行全部保留。
+6. 后续完整导出必须包含 PostgreSQL 数据 + CSV/JSON/Excel + 全部原图。
 
-然后把小程序本地台账迁移到正式云数据库，并继续实现原图字段定位、局部裁图复核、重复单检测和完整数据库导出。
+## 下一阶段
+
+- API 登录与小程序身份鉴权
+- Nginx/Caddy HTTPS
+- 字段局部裁图二次识别
+- 重复发货单检测
+- 商品库管理
+- 统计页面
+- Excel / CSV / JSON / ZIP 完整数据库导出
+- PostgreSQL 与原图自动备份
