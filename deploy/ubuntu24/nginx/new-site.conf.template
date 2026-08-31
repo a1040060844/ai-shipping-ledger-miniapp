@@ -1,0 +1,15 @@
+# Use only when the selected domain does NOT already have a vhost.
+# Replace __DOMAIN__ before enabling. If a website already uses the domain,
+# do not use this file; include location.conf in the existing HTTPS server block instead.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name __DOMAIN__;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    include /etc/nginx/snippets/ai-shipping-ledger-location.conf;
+}
