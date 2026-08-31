@@ -15,6 +15,7 @@ APP_BACKUP="/var/backups/ai-shipping-ledger"
 DB_NAME="shipping_ledger"
 DB_USER="shipping_ledger"
 MINIO_USER="minio-shipping"
+MINIO_GROUP="minio-shipping"
 MINIO_BUCKET="shipping-ledger"
 
 DASHSCOPE_API_KEY="${DASHSCOPE_API_KEY:-}"
@@ -42,11 +43,13 @@ EOF
   apt-get install -y nodejs
 fi
 
-id "$APP_USER" >/dev/null 2>&1 || useradd --system --create-home --home-dir /var/lib/${APP_USER} --shell /usr/sbin/nologin "$APP_USER"
-id "$MINIO_USER" >/dev/null 2>&1 || useradd --system --home-dir "$APP_DATA/minio" --shell /usr/sbin/nologin "$MINIO_USER"
+getent group "$APP_GROUP" >/dev/null || groupadd --system "$APP_GROUP"
+id "$APP_USER" >/dev/null 2>&1 || useradd --system --gid "$APP_GROUP" --create-home --home-dir /var/lib/${APP_USER} --shell /usr/sbin/nologin "$APP_USER"
+getent group "$MINIO_GROUP" >/dev/null || groupadd --system "$MINIO_GROUP"
+id "$MINIO_USER" >/dev/null 2>&1 || useradd --system --gid "$MINIO_GROUP" --home-dir "$APP_DATA/minio" --shell /usr/sbin/nologin "$MINIO_USER"
 
 install -d -m 0750 -o root -g "$APP_GROUP" "$APP_ETC"
-install -d -m 0750 -o "$MINIO_USER" -g "$MINIO_USER" "$APP_DATA/minio"
+install -d -m 0750 -o "$MINIO_USER" -g "$MINIO_GROUP" "$APP_DATA/minio"
 install -d -m 0750 -o root -g "$APP_GROUP" "$APP_BACKUP"
 install -d -m 0755 /opt/ai-shipping-ledger
 
@@ -67,14 +70,14 @@ MINIO_ACCESS_KEY="${MINIO_ACCESS_KEY:-shipping-$(openssl rand -hex 8)}"
 MINIO_SECRET_KEY="${MINIO_SECRET_KEY:-$(openssl rand -hex 32)}"
 
 # Local-only PostgreSQL role/database. Passwords are generated as hex so DATABASE_URL needs no URL escaping.
-sudo -u postgres psql --set=ON_ERROR_STOP=1 --set=dbpass="$DB_PASSWORD" <<'SQL'
+runuser -u postgres -- psql --set=ON_ERROR_STOP=1 --set=dbpass="$DB_PASSWORD" <<'SQL'
 SELECT format('CREATE ROLE shipping_ledger LOGIN PASSWORD %L', :'dbpass')
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'shipping_ledger') \gexec
 SELECT format('ALTER ROLE shipping_ledger PASSWORD %L', :'dbpass') \gexec
 SQL
 
-if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1; then
-  sudo -u postgres createdb -O "$DB_USER" "$DB_NAME"
+if ! runuser -u postgres -- psql -tAc "SELECT 1 FROM pg_database WHERE datname='${DB_NAME}'" | grep -q 1; then
+  runuser -u postgres -- createdb -O "$DB_USER" "$DB_NAME"
 fi
 
 cat >"$APP_ETC/server.env" <<EOF
@@ -119,6 +122,7 @@ for _ in $(seq 1 30); do
   if curl -fsS http://127.0.0.1:9000/minio/health/ready >/dev/null; then break; fi
   sleep 1
 done
+curl -fsS http://127.0.0.1:9000/minio/health/ready >/dev/null || { echo "MinIO did not become ready." >&2; exit 1; }
 
 mc alias set shipping-local http://127.0.0.1:9000 "$MINIO_ACCESS_KEY" "$MINIO_SECRET_KEY" >/dev/null
 mc mb --ignore-existing "shipping-local/${MINIO_BUCKET}" >/dev/null
