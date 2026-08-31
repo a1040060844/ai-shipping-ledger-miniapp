@@ -1,5 +1,5 @@
 const { persistFiles } = require('../../services/filePersistence')
-const { recognize } = require('../../services/mockRecognition')
+const { recognize } = require('../../services/recognitionClient')
 const { upsertShipment } = require('../../services/storage')
 
 Page({
@@ -16,8 +16,9 @@ Page({
       success: (res) => {
         const next = (res.tempFiles || []).map((file, index) => ({
           id: `image_${Date.now()}_${index}`,
-          name: `发货单图片${index + 1}`,
+          name: `发货单图片${index + 1}.jpg`,
           type: 'image',
+          mimeType: file.fileType === 'image' ? 'image/jpeg' : null,
           path: file.tempFilePath,
           size: file.size || 0
         }))
@@ -32,13 +33,19 @@ Page({
       type: 'file',
       extension: ['pdf', 'jpg', 'jpeg', 'png'],
       success: (res) => {
-        const next = (res.tempFiles || []).map((file, index) => ({
-          id: `file_${Date.now()}_${index}`,
-          name: file.name || `文件${index + 1}`,
-          type: /\.pdf$/i.test(file.name || '') ? 'pdf' : 'image',
-          path: file.path,
-          size: file.size || 0
-        }))
+        const next = (res.tempFiles || []).map((file, index) => {
+          const name = file.name || `文件${index + 1}`
+          const isPdf = /\.pdf$/i.test(name)
+          const isPng = /\.png$/i.test(name)
+          return {
+            id: `file_${Date.now()}_${index}`,
+            name,
+            type: isPdf ? 'pdf' : 'image',
+            mimeType: isPdf ? 'application/pdf' : (isPng ? 'image/png' : 'image/jpeg'),
+            path: file.path,
+            size: file.size || 0
+          }
+        })
         this.setData({ files: this.data.files.concat(next) })
       }
     })
@@ -70,9 +77,13 @@ Page({
       this.setData({ processing: false })
       wx.redirectTo({ url: `/pages/detail/detail?id=${shipment.id}` })
     } catch (error) {
+      console.error('recognition failed', error)
       wx.hideLoading()
       this.setData({ processing: false })
-      wx.showToast({ title: '识别失败，请重试', icon: 'none' })
+      wx.showToast({
+        title: error && error.message ? error.message.slice(0, 18) : '识别失败，请重试',
+        icon: 'none'
+      })
     }
   }
 })
