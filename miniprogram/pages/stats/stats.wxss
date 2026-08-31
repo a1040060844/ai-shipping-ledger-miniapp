@@ -1,0 +1,158 @@
+.stats-head {
+  padding: 8rpx 4rpx 22rpx;
+}
+
+.period-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14rpx;
+}
+
+.period-button {
+  min-height: 68rpx;
+  padding: 0 22rpx;
+  border-radius: 17rpx;
+  background: #ffffff;
+  border: 1rpx solid #e1e7e4;
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  color: #30423a;
+  font-size: 25rpx;
+  font-weight: 650;
+  box-sizing: border-box;
+}
+
+.period-arrow {
+  color: #87948e;
+}
+
+.all-time {
+  color: #176b4d;
+  font-size: 23rpx;
+  padding: 16rpx 4rpx;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+  margin-top: 18rpx;
+}
+
+.kpi-card {
+  min-height: 178rpx;
+  border-radius: 22rpx;
+  padding: 24rpx;
+  background: #ffffff;
+  border: 1rpx solid #e5ebe8;
+  box-sizing: border-box;
+}
+
+.kpi-primary {
+  background: #176b4d;
+  border-color: #176b4d;
+  color: #ffffff;
+}
+
+.kpi-warning {
+  background: #fff8e8;
+  border-color: #edd9a9;
+}
+
+.kpi-label {
+  color: #7d8a84;
+  font-size: 22rpx;
+}
+
+.kpi-primary .kpi-label,
+.kpi-primary .kpi-foot {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.kpi-value {
+  margin-top: 12rpx;
+  font-size: 42rpx;
+  font-weight: 780;
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.small-value {
+  font-size: 38rpx;
+}
+
+.kpi-foot {
+  margin-top: 8rpx;
+  color: #8b9691;
+  font-size: 20rpx;
+  line-height: 1.4;
+}
+
+.rank-list {
+  background: #ffffff;
+  border: 1rpx solid #e5ebe8;
+  border-radius: 24rpx;
+  overflow: hidden;
+}
+
+.rank-row,
+.product-rank {
+  padding: 22rpx 24rpx;
+  border-top: 1rpx solid #edf1ef;
+}
+
+.rank-row:first-child,
+.product-rank:first-child {
+  border-top: none;
+}
+
+.rank-top,
+.product-rank-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.rank-name,
+.product-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 26rpx;
+  font-weight: 680;
+  line-height: 1.45;
+}
+
+.rank-number {
+  flex: 0 0 auto;
+  font-size: 25rpx;
+  font-weight: 720;
+  color: #176b4d;
+}
+
+.rank-meta,
+.product-meta {
+  color: #87938e;
+  font-size: 21rpx;
+  margin-top: 6rpx;
+}
+
+.bar-track {
+  height: 8rpx;
+  border-radius: 999rpx;
+  background: #edf2ef;
+  margin-top: 15rpx;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 999rpx;
+  background: #5a9b7f;
+}
+
+.product-bar {
+  background: #8aae9f;
+}
