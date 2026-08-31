@@ -1,0 +1,57 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: shipping
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-now}
+      POSTGRES_DB: shipping_ledger
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U shipping -d shipping_ledger"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-shipping-admin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-change-this-password}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9001:9001"
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://shipping:${POSTGRES_PASSWORD:-change-me-now}@postgres:5432/shipping_ledger?schema=public
+      PORT: 3000
+      HOST: 0.0.0.0
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_USE_SSL: "false"
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-shipping-admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-change-this-password}
+      MINIO_BUCKET: shipping-ledger
+      MAX_UPLOAD_BYTES: 15728640
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY:-}
+      DASHSCOPE_BASE_URL: ${DASHSCOPE_BASE_URL:-}
+      QWEN_MODEL: ${QWEN_MODEL:-qwen3.8-flash}
+    command: sh -c "npx prisma db push && node dist/app.js"
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
+  minio_data:

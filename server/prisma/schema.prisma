@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ShipmentStatus {
+  ACTIVE
+  CORRECTED
+  VOID
+}
+
+enum RecognitionStatus {
+  AUTO_ACCEPT
+  AI_REVIEW
+  HUMAN_REVIEW
+}
+
+enum AiJobStatus {
+  PENDING
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+model Factory {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shipments Shipment[]
+  aliases   FactoryProductAlias[]
+}
+
+model Product {
+  id                    String   @id @default(cuid())
+  canonicalName         String
+  specification         String?
+  color                 String?
+  variant               String?
+  defaultUnitsPerCarton Int?
+  active                Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  aliases FactoryProductAlias[]
+  items   ShipmentItem[]
+
+  @@index([canonicalName])
+}
+
+model FactoryProductAlias {
+  id                   String   @id @default(cuid())
+  factoryId            String?
+  productId            String
+  factorySku           String?
+  factoryName          String?
+  aliases              Json?
+  commonUnitsPerCarton Json?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  factory Factory? @relation(fields: [factoryId], references: [id], onDelete: SetNull)
+  product Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([factoryId])
+  @@index([productId])
+  @@index([factorySku])
+}
+
+model Shipment {
+  id                String            @id @default(cuid())
+  factoryId         String?
+  shipmentDate      DateTime?
+  documentNo        String?
+  status            ShipmentStatus    @default(ACTIVE)
+  recognitionStatus RecognitionStatus @default(AI_REVIEW)
+  totalCartons      Int?
+  totalUnits        Int?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  factory     Factory?       @relation(fields: [factoryId], references: [id], onDelete: SetNull)
+  sourceFiles SourceFile[]
+  items       ShipmentItem[]
+  aiJobs      AiJob[]
+  auditLogs   AuditLog[]
+
+  @@index([shipmentDate])
+  @@index([factoryId])
+  @@index([documentNo])
+}
+
+model ShipmentItem {
+  id                    String   @id @default(cuid())
+  shipmentId            String
+  sourceFileId          String?
+  productId             String?
+  loadSection           String?
+  sourceText            String?
+  skuObserved           String?
+  productNameObserved   String?
+  productNameNormalized String?
+  specification         String?
+  color                 String?
+  variant               String?
+  cartons               Int?
+  unitsPerCarton        Int?
+  totalUnits            Int?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  shipment  Shipment   @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+  sourceFile SourceFile? @relation(fields: [sourceFileId], references: [id], onDelete: SetNull)
+  product   Product?   @relation(fields: [productId], references: [id], onDelete: SetNull)
+  evidence  FieldEvidence[]
+  auditLogs AuditLog[]
+
+  @@index([shipmentId])
+  @@index([productId])
+  @@index([skuObserved])
+}
+
+model SourceFile {
+  id                 String   @id @default(cuid())
+  shipmentId         String?
+  originalFilename   String
+  originalObjectKey  String   @unique
+  enhancedObjectKey  String?
+  thumbnailObjectKey String?
+  sha256             String
+  mimeType           String
+  fileSize           Int
+  width              Int?
+  height             Int?
+  uploadedAt         DateTime @default(now())
+
+  shipment Shipment?      @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+  items    ShipmentItem[]
+
+  @@index([shipmentId])
+  @@index([sha256])
+}
+
+model FieldEvidence {
+  id                  String   @id @default(cuid())
+  shipmentItemId      String
+  field               String
+  ocrValue            Json?
+  ocrConfidence       Float?
+  aiValue             Json?
+  aiConfidence        Float?
+  finalValue          Json?
+  decision            String
+  visualConfirmed     Boolean  @default(false)
+  historyMatched      Boolean  @default(false)
+  inferredFromHistory Boolean  @default(false)
+  notes               String?
+  region              Json?
+  createdAt           DateTime @default(now())
+
+  shipmentItem ShipmentItem @relation(fields: [shipmentItemId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentItemId])
+  @@index([field])
+}
+
+model AiJob {
+  id         String      @id @default(cuid())
+  shipmentId String?
+  model      String
+  stage      String
+  status     AiJobStatus @default(PENDING)
+  input      Json?
+  output     Json?
+  error      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  shipment Shipment? @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+
+  @@index([shipmentId])
+  @@index([status])
+}
+
+model AuditLog {
+  id             String   @id @default(cuid())
+  shipmentId     String?
+  shipmentItemId String?
+  entityType     String
+  entityId       String
+  field          String
+  before         Json?
+  after          Json?
+  actor          String
+  reason         String?
+  createdAt      DateTime @default(now())
+
+  shipment     Shipment?     @relation(fields: [shipmentId], references: [id], onDelete: SetNull)
+  shipmentItem ShipmentItem? @relation(fields: [shipmentItemId], references: [id], onDelete: SetNull)
+
+  @@index([shipmentId])
+  @@index([shipmentItemId])
+  @@index([createdAt])
+}
