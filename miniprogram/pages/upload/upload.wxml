@@ -1,49 +1,75 @@
-<view class="container">
-  <view class="card mode-notice">
-    <view class="row">
-      <view class="section-title mode-title">当前：演示识别模式</view>
-      <view class="badge badge-warning">Mock AI</view>
-    </view>
-    <view class="muted">这一阶段先验证上传、保存原图、编辑和台账流程。下一阶段再接真实 OCR + 多模态大模型。</view>
-  </view>
-
-  <view class="card">
-    <view class="section-title">添加发货单</view>
-    <view class="action-grid">
-      <button class="secondary-button" bindtap="chooseImages">拍照 / 相册</button>
-      <button class="secondary-button" bindtap="chooseFile">聊天文件 / PDF</button>
+<view class="container upload-page">
+  <view class="upload-head">
+    <view class="page-title">上传发货单</view>
+    <view class="muted">可以拍照、从相册选，或者直接上传聊天里的图片 / PDF。</view>
+    <view class="mode-line">
+      <view class="badge badge-{{modeTone}}">{{modeText}}</view>
+      <view class="muted small">{{modeHint}}</view>
     </view>
   </view>
 
-  <view class="card" wx:if="{{files.length}}">
-    <view class="row file-header">
-      <view class="section-title">已选择 {{files.length}} 个文件</view>
-      <view class="muted">可多张属于同一发货单</view>
+  <view class="source-grid">
+    <view class="source-card camera-card" bindtap="chooseImages">
+      <view class="source-icon">▣</view>
+      <view class="source-title">拍照 / 相册</view>
+      <view class="source-desc">适合纸质发货单</view>
     </view>
+    <view class="source-card" bindtap="chooseFile">
+      <view class="source-icon file-icon">≡</view>
+      <view class="source-title">聊天文件 / PDF</view>
+      <view class="source-desc">适合电子单据</view>
+    </view>
+  </view>
 
-    <view wx:for="{{files}}" wx:key="id" class="file-row">
-      <image
-        wx:if="{{item.type === 'image'}}"
-        class="thumb"
-        src="{{item.path}}"
-        mode="aspectFill"
-        data-path="{{item.path}}"
-        bindtap="previewImage"
-      />
-      <view wx:else class="pdf-thumb">PDF</view>
-      <view class="file-info">
-        <view class="file-name">{{item.name}}</view>
-        <view class="muted">原文件将在识别前先保存</view>
+  <view class="tips-card">
+    <view class="tips-title">拍摄不用太讲究</view>
+    <view class="tips-row"><text class="tips-dot"></text><text>横拍、轻微歪斜可以交给 AI 自动处理</text></view>
+    <view class="tips-row"><text class="tips-dot"></text><text>一张发货单有多页时，一次全部选进来</text></view>
+    <view class="tips-row"><text class="tips-dot"></text><text>AI 会先自己复核，实在看不清才让你处理</text></view>
+  </view>
+
+  <view wx:if="{{files.length}}">
+    <view class="section-head file-section-head">
+      <view>
+        <view class="section-title">已添加 {{files.length}} 个文件</view>
+        <view class="muted small">这些文件会作为同一张发货单处理</view>
       </view>
-      <button class="remove-button" data-id="{{item.id}}" bindtap="removeFile">删除</button>
     </view>
+
+    <view class="file-list">
+      <view wx:for="{{files}}" wx:key="id" class="file-row">
+        <image
+          wx:if="{{item.type === 'image'}}"
+          class="thumb"
+          src="{{item.path}}"
+          mode="aspectFill"
+          data-path="{{item.path}}"
+          bindtap="previewImage"
+        />
+        <view wx:else class="pdf-thumb">PDF</view>
+        <view class="file-info">
+          <view class="file-name">{{item.name}}</view>
+          <view class="file-meta">原文件会保留，可随时回看</view>
+        </view>
+        <view class="remove-button" data-id="{{item.id}}" bindtap="removeFile">移除</view>
+      </view>
+    </view>
+
+    <view class="privacy-note">
+      <view class="privacy-title">识别后直接进入台账</view>
+      <view class="muted small">没有“确认发货”步骤。只有 AI 无法确定的字段会单独标出来让你修改。</view>
+    </view>
+
+    <button
+      class="primary-button recognize-button"
+      loading="{{processing}}"
+      disabled="{{processing}}"
+      bindtap="startRecognition"
+    >{{processing ? 'AI 正在整理…' : '开始识别并记录'}}</button>
   </view>
 
-  <button
-    wx:if="{{files.length}}"
-    class="primary-button recognize-button"
-    loading="{{processing}}"
-    disabled="{{processing}}"
-    bindtap="startRecognition"
-  >开始识别并记录</button>
+  <view wx:else class="empty-upload">
+    <view class="empty-upload-title">先添加一张发货单</view>
+    <view class="muted">原图会保留下来，后续任何统计都能追溯回这里。</view>
+  </view>
 </view>
