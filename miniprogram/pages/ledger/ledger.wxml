@@ -1,0 +1,39 @@
+<view class="container">
+  <view class="card ledger-summary">
+    <view class="section-title">全部记录</view>
+    <view class="summary-grid">
+      <view>
+        <view class="summary-value">{{summary.shipments}}</view>
+        <view class="muted">发货单</view>
+      </view>
+      <view>
+        <view class="summary-value">{{summary.cartons}}</view>
+        <view class="muted">箱</view>
+      </view>
+      <view>
+        <view class="summary-value">{{summary.units}}</view>
+        <view class="muted">件</view>
+      </view>
+    </view>
+  </view>
+
+  <view wx:if="{{shipments.length === 0}}" class="card empty-state">
+    <view>暂无台账</view>
+    <view class="muted">从“发货”页上传发货单后会自动记录。</view>
+  </view>
+
+  <view
+    wx:for="{{shipments}}"
+    wx:key="id"
+    class="card ledger-row"
+    data-id="{{item.id}}"
+    bindtap="openDetail"
+  >
+    <view class="row">
+      <view class="factory-name">{{item.factoryName}}</view>
+      <view class="muted">{{item.shipmentDate}}</view>
+    </view>
+    <view class="numbers">{{item.totalCartons}} 箱 · {{item.totalUnits}} 件</view>
+    <view class="muted">{{item.items.length}} 条原始商品明细</view>
+  </view>
+</view>

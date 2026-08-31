@@ -5,6 +5,9 @@ node_modules/
 *.log
 coverage/
 dist/
+project.private.config.json
+miniprogram_npm/
+.cloudbase/
 # Never commit real shipping-order images or private exports
 private-data/
 exports/

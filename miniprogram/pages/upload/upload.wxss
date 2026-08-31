@@ -1,0 +1,67 @@
+.mode-notice {
+  border: 1rpx solid #f0d99c;
+}
+
+.mode-title,
+.file-header .section-title {
+  margin-bottom: 0;
+}
+
+.action-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.file-row {
+  display: flex;
+  align-items: center;
+  gap: 18rpx;
+  padding: 20rpx 0;
+  border-top: 1rpx solid #eceef1;
+}
+
+.thumb,
+.pdf-thumb {
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 12rpx;
+  flex: 0 0 auto;
+}
+
+.pdf-thumb {
+  background: #eef0f3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 700;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 27rpx;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: 8rpx;
+}
+
+.remove-button {
+  margin: 0;
+  padding: 0 18rpx;
+  line-height: 58rpx;
+  font-size: 24rpx;
+  color: #7a2e2e;
+  background: #fff;
+  border: 1rpx solid #eadada;
+}
+
+.recognize-button {
+  margin-top: 8rpx;
+}

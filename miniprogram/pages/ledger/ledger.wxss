@@ -1,0 +1,36 @@
+.ledger-summary {
+  margin-bottom: 24rpx;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12rpx;
+}
+
+.summary-value {
+  font-size: 34rpx;
+  font-weight: 700;
+  margin-bottom: 4rpx;
+}
+
+.empty-state {
+  text-align: center;
+  line-height: 1.8;
+}
+
+.ledger-row {
+  border: 1rpx solid #eceef1;
+}
+
+.factory-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.numbers {
+  font-size: 30rpx;
+  font-weight: 700;
+  margin: 16rpx 0 8rpx;
+}

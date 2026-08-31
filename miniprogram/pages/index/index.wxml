@@ -1,0 +1,44 @@
+<view class="container">
+  <view class="hero card">
+    <view class="title">发货台账</view>
+    <view class="muted hero-subtitle">拍照上传，AI 整理，数据直接进入台账</view>
+    <button class="primary-button upload-button" bindtap="openUpload">＋ 上传发货单</button>
+  </view>
+
+  <view class="stats-grid">
+    <view class="stat-card">
+      <view class="stat-value">{{summary.shipments}}</view>
+      <view class="muted">发货单</view>
+    </view>
+    <view class="stat-card">
+      <view class="stat-value">{{summary.cartons}}</view>
+      <view class="muted">总箱数</view>
+    </view>
+    <view class="stat-card">
+      <view class="stat-value">{{summary.units}}</view>
+      <view class="muted">总件数</view>
+    </view>
+  </view>
+
+  <view class="section-title">最近记录</view>
+
+  <view wx:if="{{recentShipments.length === 0}}" class="card empty-state">
+    <view>还没有发货记录</view>
+    <view class="muted">上传第一张发货单后，这里会自动出现台账记录。</view>
+  </view>
+
+  <view
+    wx:for="{{recentShipments}}"
+    wx:key="id"
+    class="card shipment-card"
+    data-id="{{item.id}}"
+    bindtap="openDetail"
+  >
+    <view class="row">
+      <view class="shipment-factory">{{item.factoryName}}</view>
+      <view class="muted">{{item.shipmentDate}}</view>
+    </view>
+    <view class="shipment-summary">{{item.items.length}} 种明细 · {{item.totalCartons}} 箱 · {{item.totalUnits}} 件</view>
+    <view class="muted" wx:if="{{item.documentNo}}">单号：{{item.documentNo}}</view>
+  </view>
+</view>

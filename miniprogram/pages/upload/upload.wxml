@@ -1,0 +1,49 @@
+<view class="container">
+  <view class="card mode-notice">
+    <view class="row">
+      <view class="section-title mode-title">当前：演示识别模式</view>
+      <view class="badge badge-warning">Mock AI</view>
+    </view>
+    <view class="muted">这一阶段先验证上传、保存原图、编辑和台账流程。下一阶段再接真实 OCR + 多模态大模型。</view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">添加发货单</view>
+    <view class="action-grid">
+      <button class="secondary-button" bindtap="chooseImages">拍照 / 相册</button>
+      <button class="secondary-button" bindtap="chooseFile">聊天文件 / PDF</button>
+    </view>
+  </view>
+
+  <view class="card" wx:if="{{files.length}}">
+    <view class="row file-header">
+      <view class="section-title">已选择 {{files.length}} 个文件</view>
+      <view class="muted">可多张属于同一发货单</view>
+    </view>
+
+    <view wx:for="{{files}}" wx:key="id" class="file-row">
+      <image
+        wx:if="{{item.type === 'image'}}"
+        class="thumb"
+        src="{{item.path}}"
+        mode="aspectFill"
+        data-path="{{item.path}}"
+        bindtap="previewImage"
+      />
+      <view wx:else class="pdf-thumb">PDF</view>
+      <view class="file-info">
+        <view class="file-name">{{item.name}}</view>
+        <view class="muted">原文件将在识别前先保存</view>
+      </view>
+      <button class="remove-button" data-id="{{item.id}}" bindtap="removeFile">删除</button>
+    </view>
+  </view>
+
+  <button
+    wx:if="{{files.length}}"
+    class="primary-button recognize-button"
+    loading="{{processing}}"
+    disabled="{{processing}}"
+    bindtap="startRecognition"
+  >开始识别并记录</button>
+</view>

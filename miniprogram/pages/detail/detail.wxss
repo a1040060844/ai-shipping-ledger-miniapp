@@ -1,0 +1,81 @@
+.summary-head {
+  align-items: flex-start;
+}
+
+.summary-line {
+  font-size: 36rpx;
+  font-weight: 700;
+  margin-top: 24rpx;
+}
+
+.source-button {
+  margin-top: 24rpx;
+}
+
+.field-block {
+  margin-top: 18rpx;
+}
+
+.field-label {
+  font-size: 24rpx;
+  color: #6b7280;
+  margin-bottom: 8rpx;
+}
+
+.field-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #f8f9fa;
+  border: 1rpx solid #e3e6ea;
+  border-radius: 12rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+}
+
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16rpx;
+}
+
+.field-warning .field-label {
+  color: #8a5a00;
+}
+
+.field-warning .field-input {
+  background: #fffaf0;
+  border-color: #e4c56b;
+}
+
+.item-head {
+  margin-bottom: 16rpx;
+}
+
+.item-index {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.source-text {
+  background: #f8f9fa;
+  border-radius: 12rpx;
+  padding: 18rpx;
+  color: #59606a;
+  font-size: 24rpx;
+  line-height: 1.6;
+}
+
+.calculation {
+  margin-top: 22rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid #eceef1;
+  font-size: 28rpx;
+}
+
+.calculation-strong {
+  font-weight: 700;
+}
+
+.audit-note {
+  margin-top: 10rpx;
+}

@@ -1,0 +1,31 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/upload/upload",
+    "pages/detail/detail",
+    "pages/ledger/ledger"
+  ],
+  "window": {
+    "navigationBarTitleText": "AI 发货台账",
+    "navigationBarBackgroundColor": "#ffffff",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#f5f6f7"
+  },
+  "tabBar": {
+    "color": "#7a7f87",
+    "selectedColor": "#111827",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "发货"
+      },
+      {
+        "pagePath": "pages/ledger/ledger",
+        "text": "台账"
+      }
+    ]
+  },
+  "sitemapLocation": "sitemap.json"
+}
