@@ -1,41 +1,83 @@
 <view class="container">
-  <view class="card ledger-summary">
-    <view class="section-title">全部记录</view>
-    <view class="summary-grid">
-      <view>
-        <view class="summary-value">{{summary.shipments}}</view>
-        <view class="muted">发货单</view>
-      </view>
-      <view>
-        <view class="summary-value">{{summary.cartons}}</view>
-        <view class="muted">已确认箱数</view>
-      </view>
-      <view>
-        <view class="summary-value">{{summary.units}}</view>
-        <view class="muted">已确认件数</view>
-      </view>
+  <view class="ledger-head">
+    <view class="page-title">发货台账</view>
+    <view class="muted">按工厂、商品、SKU、单号或日期快速找到原始发货记录。</view>
+  </view>
+
+  <view class="search-shell">
+    <view class="search-mark">⌕</view>
+    <input class="search-input" placeholder="搜索工厂 / 商品 / SKU / 单号" value="{{keyword}}" bindinput="onSearchInput" />
+  </view>
+
+  <view class="filter-row">
+    <picker mode="date" fields="month" value="{{month}}" bindchange="onMonthChange">
+      <view class="filter-pill {{month ? 'filter-pill-active' : ''}}">{{month || '全部月份'}}</view>
+    </picker>
+    <view class="filter-pill" wx:if="{{month}}" bindtap="clearMonth">清除月份</view>
+  </view>
+
+  <view class="status-tabs">
+    <view class="status-tab {{statusFilter === 'all' ? 'status-tab-active' : ''}}" data-status="all" bindtap="setStatusFilter">全部</view>
+    <view class="status-tab {{statusFilter === 'review' ? 'status-tab-active' : ''}}" data-status="review" bindtap="setStatusFilter">待复核</view>
+    <view class="status-tab {{statusFilter === 'done' ? 'status-tab-active' : ''}}" data-status="done" bindtap="setStatusFilter">已记录</view>
+  </view>
+
+  <view class="summary-strip">
+    <view class="summary-strip-item">
+      <view class="summary-value">{{summary.shipments}}</view>
+      <view class="summary-label">发货单</view>
     </view>
-    <view class="badge badge-warning" wx:if="{{summary.incompleteShipments > 0}}">{{summary.incompleteShipments}} 张单有数量待确认</view>
+    <view class="summary-strip-item">
+      <view class="summary-value">{{summary.cartons}}</view>
+      <view class="summary-label">已确认箱</view>
+    </view>
+    <view class="summary-strip-item">
+      <view class="summary-value">{{summary.units}}</view>
+      <view class="summary-label">已确认件</view>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <view class="section-title">记录 {{shipments.length}}</view>
+    <view class="muted small" wx:if="{{summary.incompleteShipments > 0}}">{{summary.incompleteShipments}} 张待复核</view>
   </view>
 
   <view wx:if="{{shipments.length === 0}}" class="card empty-state">
-    <view>暂无台账</view>
-    <view class="muted">从“发货”页上传发货单后会自动记录。</view>
+    <view class="empty-title">没有符合条件的记录</view>
+    <view class="muted">可以换一个关键词、月份或状态。</view>
   </view>
 
   <view
     wx:for="{{shipments}}"
     wx:key="id"
-    class="card ledger-row"
+    class="ledger-row"
     data-id="{{item.id}}"
     bindtap="openDetail"
   >
-    <view class="row">
-      <view class="factory-name">{{item.factoryName}}</view>
-      <view class="muted">{{item.shipmentDate}}</view>
+    <view class="row ledger-top">
+      <view class="factory-name">{{item.factoryName || '未识别工厂'}}</view>
+      <view class="badge badge-{{item.statusTone}}">{{item.statusText}}</view>
     </view>
-    <view class="numbers" wx:if="{{item.quantityStatus !== 'incomplete'}}">{{item.totalCartons}} 箱 · {{item.totalUnits}} 件</view>
-    <view class="numbers" wx:else>已确认 {{item.knownCartons}} 箱 · {{item.knownUnits}} 件 · 待确认</view>
-    <view class="muted">{{item.items.length}} 条原始商品明细</view>
+    <view class="ledger-meta">
+      <text>{{item.displayDate}}</text>
+      <text wx:if="{{item.documentNo}}"> · {{item.documentNo}}</text>
+    </view>
+
+    <view class="numbers" wx:if="{{item.quantityStatus !== 'incomplete'}}">
+      <text>{{item.totalCartons}} 箱</text>
+      <text class="dot">·</text>
+      <text class="strong">{{item.totalUnits}} 件</text>
+    </view>
+    <view class="numbers warning-text" wx:else>
+      <text>已确认 {{item.knownCartons}} 箱</text>
+      <text class="dot">·</text>
+      <text>{{item.knownUnits}} 件</text>
+    </view>
+
+    <view class="ledger-foot">
+      <view class="muted small">{{item.items.length}} 条原始商品明细</view>
+      <view class="review-fields" wx:if="{{item.reviewFieldCount > 0}}">{{item.reviewFieldCount}} 个字段待处理</view>
+      <view class="ledger-arrow" wx:else>›</view>
+    </view>
   </view>
 </view>
