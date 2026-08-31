@@ -1,49 +1,84 @@
 <view class="container">
-  <view class="hero card">
-    <view class="title">发货台账</view>
-    <view class="muted hero-subtitle">拍照上传，AI 整理，数据直接进入台账</view>
-    <button class="primary-button upload-button" bindtap="openUpload">＋ 上传发货单</button>
+  <view class="home-head">
+    <view>
+      <view class="page-title">发货台账</view>
+      <view class="muted">拍原单，AI 整理，直接沉淀成可查的发货数据</view>
+    </view>
+    <view class="ai-pill">AI</view>
+  </view>
+
+  <view class="upload-hero" bindtap="openUpload">
+    <view class="upload-copy">
+      <view class="upload-kicker">新建发货记录</view>
+      <view class="upload-title">拍照或上传发货单</view>
+      <view class="upload-desc">原图保存 · 商品匹配 · 数量复核 · 自动入账</view>
+    </view>
+    <view class="upload-plus">＋</view>
   </view>
 
   <view class="stats-grid">
     <view class="stat-card">
       <view class="stat-value">{{summary.shipments}}</view>
-      <view class="muted">发货单</view>
+      <view class="stat-label">发货单</view>
     </view>
     <view class="stat-card">
       <view class="stat-value">{{summary.cartons}}</view>
-      <view class="muted">已确认箱数</view>
+      <view class="stat-label">已确认箱数</view>
     </view>
     <view class="stat-card">
       <view class="stat-value">{{summary.units}}</view>
-      <view class="muted">已确认件数</view>
+      <view class="stat-label">已确认件数</view>
     </view>
   </view>
 
-  <view class="card" wx:if="{{summary.incompleteShipments > 0}}">
-    <view class="badge badge-warning">{{summary.incompleteShipments}} 张发货单仍有数量待确认，未计入完整合计</view>
+  <view class="review-card" wx:if="{{summary.incompleteShipments > 0}}" bindtap="openLedger">
+    <view class="review-mark">!</view>
+    <view class="review-copy">
+      <view class="review-title">{{summary.incompleteShipments}} 张发货单需要你看一眼</view>
+      <view class="review-desc">只处理 AI 最终仍无法确定的字段，其他数据已经自动记录。</view>
+    </view>
+    <view class="review-arrow">›</view>
   </view>
 
-  <view class="section-title">最近记录</view>
+  <view class="section-head">
+    <view class="section-title">最近记录</view>
+    <view class="section-link" bindtap="openLedger">查看全部</view>
+  </view>
 
   <view wx:if="{{recentShipments.length === 0}}" class="card empty-state">
-    <view>还没有发货记录</view>
-    <view class="muted">上传第一张发货单后，这里会自动出现台账记录。</view>
+    <view class="empty-title">还没有发货记录</view>
+    <view class="muted">上传第一张发货单后，这里会自动形成台账。</view>
   </view>
 
   <view
     wx:for="{{recentShipments}}"
     wx:key="id"
-    class="card shipment-card"
+    class="shipment-card"
     data-id="{{item.id}}"
     bindtap="openDetail"
   >
-    <view class="row">
-      <view class="shipment-factory">{{item.factoryName}}</view>
-      <view class="muted">{{item.shipmentDate}}</view>
+    <view class="row shipment-top">
+      <view class="shipment-factory">{{item.factoryName || '未识别工厂'}}</view>
+      <view class="badge badge-{{item.statusTone}}">{{item.statusText}}</view>
     </view>
-    <view class="shipment-summary" wx:if="{{item.quantityStatus !== 'incomplete'}}">{{item.items.length}} 种明细 · {{item.totalCartons}} 箱 · {{item.totalUnits}} 件</view>
-    <view class="shipment-summary" wx:else>{{item.items.length}} 种明细 · 已确认 {{item.knownCartons}} 箱 / {{item.knownUnits}} 件 · 有待确认数量</view>
-    <view class="muted" wx:if="{{item.documentNo}}">单号：{{item.documentNo}}</view>
+    <view class="shipment-date">{{item.displayDate}}</view>
+
+    <view class="shipment-metrics" wx:if="{{item.quantityStatus !== 'incomplete'}}">
+      <text>{{item.items.length}} 条明细</text>
+      <text class="dot">·</text>
+      <text>{{item.totalCartons}} 箱</text>
+      <text class="dot">·</text>
+      <text class="strong">{{item.totalUnits}} 件</text>
+    </view>
+    <view class="shipment-metrics warning-text" wx:else>
+      <text>已确认 {{item.knownCartons}} 箱 / {{item.knownUnits}} 件</text>
+      <text class="dot">·</text>
+      <text>仍有数量待复核</text>
+    </view>
+
+    <view class="shipment-bottom" wx:if="{{item.documentNo || item.reviewFieldCount > 0}}">
+      <view class="muted small" wx:if="{{item.documentNo}}">单号 {{item.documentNo}}</view>
+      <view class="review-fields" wx:if="{{item.reviewFieldCount > 0}}">{{item.reviewFieldCount}} 个字段待处理</view>
+    </view>
   </view>
 </view>
